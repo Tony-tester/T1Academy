@@ -1,4 +1,6 @@
-import annatations.*;
+package Lesson1;
+
+import Lesson1.annatations.*;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;

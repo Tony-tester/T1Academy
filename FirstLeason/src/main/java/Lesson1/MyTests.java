@@ -1,4 +1,6 @@
-import annatations.*;
+package Lesson1;
+
+import Lesson1.annatations.*;
 
 public class MyTests {
     @BeforeSuite
