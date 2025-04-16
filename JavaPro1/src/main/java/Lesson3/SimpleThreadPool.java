@@ -1,34 +1,40 @@
 package Lesson3;
 
 import java.util.LinkedList;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SimpleThreadPool {
     private final int poolSize;
-    private final List<Worker> workers = new LinkedList<>();
+    private final Thread[] workers;
     private final LinkedList<Runnable> taskQueue = new LinkedList<>();
-    private boolean isShutdown = false;
+    private final Object lock = new Object();
+    private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     public SimpleThreadPool(int poolSize) {
         this.poolSize = poolSize;
+        this.workers = new Thread[poolSize];
+
         for (int i = 0; i < poolSize; i++) {
-            Worker worker = new Worker();
-            workers.add(worker);
-            worker.start();
+            workers[i] = new Thread(new Worker());
+            workers[i].start();
         }
     }
 
-    public synchronized void execute(Runnable task) {
-        if (isShutdown) {
+    public void execute(Runnable task) {
+        if (isShutdown.get()) {
             throw new IllegalStateException("Thread pool is shutdown. Cannot accept new tasks.");
         }
-        taskQueue.addLast(task);
-        notify(); // разбудить один ожидающий поток
+        synchronized (lock) {
+            taskQueue.addLast(task);
+            lock.notify(); // разбудить один поток
+        }
     }
 
-    public synchronized void shutdown() {
-        isShutdown = true;
-        notifyAll(); // разбудить все потоки
+    public void shutdown() {
+        isShutdown.set(true);
+        synchronized (lock) {
+            lock.notifyAll(); // разбудить все потоки, чтобы они могли завершиться
+        }
     }
 
     public void awaitTermination() {
@@ -46,16 +52,16 @@ public class SimpleThreadPool {
         return poolSize;
     }
 
-    private class Worker extends Thread {
+    private class Worker implements Runnable {
         @Override
         public void run() {
-            Runnable task;
             while (true) {
-                synchronized (SimpleThreadPool.this) {
+                Runnable task;
+                synchronized (lock) {
                     while (taskQueue.isEmpty()) {
-                        if (isShutdown) return;
+                        if (isShutdown.get()) return;
                         try {
-                            SimpleThreadPool.this.wait();
+                            lock.wait();
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             return;
