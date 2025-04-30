@@ -1,50 +1,39 @@
 package org.mutsenko;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.mutsenko.services.UserService;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.UUID;
 
-@ComponentScan
-public class Main {
+@SpringBootApplication
+@RequiredArgsConstructor
+public class Main implements CommandLineRunner {
+
+    private final UserService userService;
+
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext context =
-                new AnnotationConfigApplicationContext(Main.class);
-        UserService userService = context.getBean(UserService.class);
+        SpringApplication.run(Main.class, args);
+    }
+
+    @Override
+    public void run(String... args) {
         ObjectMapper objectMapper = new ObjectMapper();
 
-        // Create users
+        // Добавим пару пользователей
         userService.createUser("alice_" + UUID.randomUUID());
         userService.createUser("bob_" + UUID.randomUUID());
 
-        // Get all users
-        System.out.println("All users:");
+        // Выведем всех
         userService.getAllUsers().forEach(user -> {
             try {
-                String json = objectMapper.writeValueAsString(user);
-                System.out.println(json);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        // Get one user
-        System.out.println("Get user ID 1: " + userService.getUser(1L));
-
-        // Delete user
-        userService.deleteUser(1L);
-        System.out.println("After deletion:");
-        userService.getAllUsers().forEach(user -> {
-            try {
-                String json = objectMapper.writeValueAsString(user);
-                System.out.println(json);
-            } catch (JsonProcessingException e) {
+                System.out.println(objectMapper.writeValueAsString(user));
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
     }
-
 }
