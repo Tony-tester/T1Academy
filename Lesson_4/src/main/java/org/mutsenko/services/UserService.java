@@ -1,8 +1,8 @@
 package org.mutsenko.services;
 
 import lombok.RequiredArgsConstructor;
-import org.mutsenko.daos.UserDao;
 import org.mutsenko.entity.User;
+import org.mutsenko.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,21 +10,22 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final UserDao dao;
+
+    private final UserRepository repository;
 
     public void createUser(String username) {
-        dao.createUser(username);
+        repository.save(new User(null, username));
     }
 
     public User getUser(Long id) {
-        return dao.getUser(id);
+        return repository.findById(id).orElse(null);
     }
 
     public List<User> getAllUsers() {
-        return dao.getAllUsers();
+        return repository.findAll();
     }
 
     public void deleteUser(Long id) {
-        dao.deleteUser(id);
+        repository.deleteById(id);
     }
 }
