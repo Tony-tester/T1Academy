@@ -14,7 +14,7 @@ public class UserService {
     private final UserRepository repository;
 
     public void createUser(String username) {
-        repository.save(new User(null, username));
+        repository.save(new User(null, username, null));
     }
 
     public User getUser(Long id) {
