@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.mutsenko.dto.ProductDto;
 import org.mutsenko.entity.Product;
 import org.mutsenko.entity.User;
+import org.mutsenko.exceptions.ProductNotFoundException;
 import org.mutsenko.repositories.ProductRepository;
 import org.mutsenko.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class ProductService {
 
     public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
         return new ProductDto(
                 product.getId(),
                 product.getAccountNumber(),
