@@ -16,3 +16,5 @@ spring:
     liquibase:
       enabled: true
       change-log: classpath:db/changelog/db.changelog-master.yaml
+limit:
+  default-value: 10000.00

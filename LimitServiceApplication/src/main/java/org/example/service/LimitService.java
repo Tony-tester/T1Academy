@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.entity.Limit;
 import org.example.exceptions.LimitException;
 import org.example.repository.LimitRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +16,12 @@ import java.util.stream.LongStream;
 public class LimitService {
 
     private final LimitRepository repository;
-    private static final BigDecimal DEFAULT_LIMIT = BigDecimal.valueOf(10000.00);
+    @Value("${limit.default-value}")
+    private BigDecimal defaultLimit;
 
     public BigDecimal getRemainingLimit(Long userId) {
         Limit limit = repository.findByUserId(userId)
-                .orElseGet(() -> repository.save(new Limit(userId, DEFAULT_LIMIT, DEFAULT_LIMIT)));
+                .orElseGet(() -> repository.save(new Limit(userId, defaultLimit, defaultLimit)));
         return limit.getRemaining();
     }
 
@@ -43,16 +45,13 @@ public class LimitService {
 
     @Scheduled(cron = "0 0 0 * * *")
     public void resetDailyLimits() {
-        repository.findAll().forEach(limit -> {
-            limit.setRemaining(limit.getDailyLimit());
-            repository.save(limit);
-        });
+        repository.resetAllRemainingLimits();
     }
 
     public void seedInitialLimits() {
         LongStream.rangeClosed(1, 100).forEach(userId -> {
             repository.findByUserId(userId).orElseGet(() -> {
-                return repository.save(new Limit(userId, DEFAULT_LIMIT, DEFAULT_LIMIT));
+                return repository.save(new Limit(userId, defaultLimit, defaultLimit));
             });
         });
     }
